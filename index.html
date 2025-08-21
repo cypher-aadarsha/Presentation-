@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit 7: Multimedia & Future Networking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Prevents scrollbars from flashing during transitions */
+        }
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+            transform: scale(0.95);
+            pointer-events: none; /* Prevent interaction with hidden slides */
+        }
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto; /* Allow interaction with the active slide */
+            z-index: 10;
+        }
+        .slide-content {
+            max-width: 800px;
+            width: 100%;
+        }
+        /* Custom list style */
+        .custom-list li {
+            position: relative;
+            padding-left: 1.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .custom-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #34d399; /* emerald-400 */
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white antialiased">
+
+    <!-- Presentation Container -->
+    <main id="presentation-container" class="relative w-full h-screen">
+
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div class="slide-content text-center">
+                <h1 class="text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-emerald-400 mb-4">Unit 7: Multimedia & Future Networking</h1>
+                <p class="text-xl md:text-2xl text-slate-300">A Detailed Exploration of Protocols and Architectures Shaping Modern Communication.</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Agenda -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-8 border-b-2 border-sky-500 pb-2">Detailed Agenda</h2>
+                <ol class="text-2xl text-slate-200 space-y-4 list-decimal list-inside">
+                    <li>Deep Dive into <span class="font-semibold text-emerald-400">SCTP</span>: Beyond TCP & UDP.</li>
+                    <li>Deconstructing <span class="font-semibold text-emerald-400">SDN</span>: The Separation of Powers.</li>
+                    <li>Understanding <span class="font-semibold text-emerald-400">NFV</span> Architecture: From Hardware to Virtual.</li>
+                    <li>The Vision of <span class="font-semibold text-emerald-400">NGN</span>: A Unified Future.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Slide 3: The Challenge of Modern Multimedia -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-8">The Nuanced Demands of Multimedia</h2>
+                <p class="text-xl text-slate-300 mb-6">Modern applications have conflicting needs that basic protocols struggle to balance:</p>
+                <ul class="custom-list text-xl text-slate-200">
+                    <li><span class="font-semibold">Reliability:</span> Video conferencing needs every packet, but a single lost packet shouldn't halt the entire stream.</li>
+                    <li><span class="font-semibold">Low Latency:</span> In online gaming, the speed of data delivery is more critical than retransmitting a lost packet from a few seconds ago.</li>
+                    <li><span class="font-semibold">Orderly Delivery:</span> Essential for media playback, but a delay in one substream (like video) shouldn't block another (like audio).</li>
+                </ul>
+                <p class="mt-8 text-lg text-slate-400 bg-slate-800 p-4 rounded-lg">This is the core problem SCTP was designed to solve: providing reliability without unnecessary blocking.</p>
+            </div>
+        </div>
+        
+        <!-- Slide 4: Overview of SCTP -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-2">SCTP: A More Advanced Transport Protocol</h2>
+                <p class="text-lg text-slate-400 mb-6">SCTP isn't just a hybrid; it's an evolution for modern networking.</p>
+                <p class="text-xl text-slate-300 mb-6">It introduces key mechanisms not found in TCP or UDP:</p>
+                <div class="grid md:grid-cols-2 gap-6 text-center">
+                    <div class="bg-slate-800 p-6 rounded-xl border border-emerald-500/30">
+                        <h3 class="text-2xl font-semibold text-emerald-400 mb-2">Four-Way Handshake</h3>
+                        <p class="text-slate-300">Provides enhanced security against SYN flood attacks compared to TCP's three-way handshake.</p>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-xl border border-sky-500/30">
+                        <h3 class="text-2xl font-semibold text-sky-400 mb-2">Chunk-Based Data Transfer</h3>
+                        <p class="text-slate-300">Groups data into logical chunks, allowing for the bundling of multiple small messages into one packet, improving efficiency.</p>
+                    </div>
+                </div>
+                 <p class="mt-8 text-lg text-center text-slate-400">It offers a robust framework for applications that need fine-grained control over data transport.</p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Key Features of SCTP (Detailed) -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-8">SCTP's Killer Features Explained</h2>
+                <div class="space-y-6">
+                    <div class="bg-slate-800 p-6 rounded-lg">
+                        <h3 class="text-2xl font-semibold text-emerald-400 mb-2">Multi-Streaming & HOL Blocking Prevention</h3>
+                        <p class="text-slate-300">Imagine a video call with audio, video, and screen sharing. SCTP can assign each to a separate stream. If a large video packet is lost and needs retransmission, the audio and screen sharing streams are <span class="font-bold">not blocked</span>. This is called Head-of-Line (HOL) blocking prevention, a major advantage over TCP.</p>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-lg">
+                        <h3 class="text-2xl font-semibold text-emerald-400 mb-2">Multi-Homing for True Resilience</h3>
+                        <p class="text-slate-300">A server can have two network cards connected to different ISPs. With SCTP, a client can connect to both. If one ISP goes down, the SCTP connection automatically fails over to the second path without the application even noticing. This provides network-level fault tolerance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: SCTP: Real-World Example (Detailed) -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-2">SCTP in Telecommunications (SS7)</h2>
+                <h3 class="text-2xl text-slate-300 mb-6">The Backbone of Modern Mobile Networks</h3>
+                <div class="bg-slate-800 p-6 rounded-lg border-l-4 border-emerald-400">
+                    <p class="text-lg text-slate-300"><span class="font-bold text-white">How it works:</span> The Signaling System 7 (SS7) protocol, which handles call setup, routing, and SMS on global mobile networks, now runs over IP networks using SCTP (this is called SIGTRAN). SCTP's reliability and multi-homing are essential for the extreme uptime requirements of national telecom infrastructure.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: The Need for a Smarter Network -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">The Rigidity of Traditional Networks</h2>
+                <p class="text-xl text-slate-300 mb-6">Traditional network hardware tightly bundles the control logic and data forwarding functions.</p>
+                <ul class="custom-list text-xl text-slate-200">
+                    <li><span class="font-semibold">Complex to Manage:</span> Each device is a "black box" with its own proprietary command-line interface and operating system.</li>
+                    <li><span class="font-semibold">Slow to Adapt:</span> A simple policy change (e.g., blocking a new type of traffic) might require manually updating hundreds of devices.</li>
+                    <li><span class="font-semibold">Vendor Lock-in:</span> Features and capabilities are dictated by the hardware vendor, limiting innovation.</li>
+                </ul>
+                <p class="mt-8 text-lg text-slate-400">This model is too slow and inflexible for the dynamic needs of cloud computing and modern applications.</p>
+            </div>
+        </div>
+
+        <!-- Slide 8: Overview of SDN -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-2">SDN: A New Network Paradigm</h2>
+                <p class="text-xl text-slate-300 mb-6">SDN's core principle is the separation of the control plane and data plane.</p>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-slate-800 p-6 rounded-lg border border-red-500/30">
+                        <h3 class="text-xl font-semibold text-red-400 mb-2">Analogy: Traditional Traffic</h3>
+                        <p class="text-slate-300">Each car driver (packet) decides their own route at every intersection (router). This can lead to traffic jams and inefficient paths.</p>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-lg border border-green-500/30">
+                        <h3 class="text-xl font-semibold text-green-400 mb-2">Analogy: SDN Traffic Control</h3>
+                        <p class="text-slate-300">A central traffic control center (SDN controller) sees the whole city and directs every car (packet) along the most optimal path.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: SDN: Data Plane & Control Plane (Detailed) -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-8">The SDN Architecture in Detail</h2>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1 bg-slate-800 p-6 rounded-lg">
+                        <h3 class="text-2xl font-semibold text-emerald-400 mb-2">Control Plane (The Brain)</h3>
+                        <p class="text-slate-300">The SDN controller runs as software. It communicates with applications via a <span class="font-bold">Northbound API</span> and with network devices via a <span class="font-bold">Southbound API</span> (like OpenFlow).</p>
+                    </div>
+                    <div class="flex-1 bg-slate-800 p-6 rounded-lg">
+                        <h3 class="text-2xl font-semibold text-emerald-400 mb-2">Data Plane (The Body)</h3>
+                        <p class="text-slate-300">These are now "dumb" forwarding devices. They contain flow tables that are populated by the controller, telling them exactly how to handle packets based on their characteristics (e.g., source/destination IP).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: SDN: Features & Benefits -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-8">The Transformative Impact of SDN</h2>
+                <ul class="custom-list text-xl text-slate-200 grid md:grid-cols-2 gap-x-8 gap-y-4">
+                    <li><span class="font-semibold">Holistic Network Visibility:</span> The controller sees the entire network topology, enabling smarter routing decisions.</li>
+                    <li><span class="font-semibold">Rapid Innovation:</span> New network protocols and applications can be developed in software without waiting for hardware vendors.</li>
+                    <li><span class="font-semibold">Automation:</span> Repetitive tasks like VLAN configuration can be fully automated through controller APIs.</li>
+                    <li><span class="font-semibold">Vendor Neutrality:</span> Using standard southbound protocols like OpenFlow allows for mixing hardware from different vendors.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 11: SDN: Real-World Example (Detailed) -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-2">SDN in Cloud Data Centers</h2>
+                <h3 class="text-2xl text-slate-300 mb-6">Enabling Multi-Tenancy and Agility</h3>
+                <div class="bg-slate-800 p-6 rounded-lg border-l-4 border-emerald-400">
+                    <p class="text-lg text-slate-300"><span class="font-bold text-white">How it works:</span> In a cloud environment, thousands of customers (tenants) share the same physical network. SDN is used to create virtual, isolated networks for each tenant. The SDN controller programs the switches to ensure that a packet from Tenant A can never reach Tenant B, providing security and isolation entirely through software.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Overview of NFV -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-2">NFV: Decoupling Software from Hardware</h2>
+                <p class="text-xl text-slate-300 mb-6">NFV's goal is to replace expensive, single-purpose network appliances with software running on commodity servers.</p>
+                <div class="bg-slate-800 p-6 rounded-lg text-center">
+                    <p class="text-lg text-slate-300">This virtualization allows for dynamic scaling. If your firewall is under heavy load, you can automatically spin up more virtual firewalls. When the load decreases, you can spin them down, paying only for what you use.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: NFV Architecture Explained -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-8">The Three Pillars of NFV</h2>
+                <div class="space-y-4">
+                    <div class="bg-slate-800 p-4 rounded-lg">
+                        <h3 class="text-xl font-semibold text-emerald-400">1. NFV Infrastructure (NFVI)</h3>
+                        <p class="text-slate-300">The hardware (compute, storage, network) and the virtualization layer (hypervisor) that provides the foundation.</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-lg">
+                        <h3 class="text-xl font-semibold text-emerald-400">2. Virtualized Network Functions (VNF)</h3>
+                        <p class="text-slate-300">The software applications themselves, such as a virtual router, virtual firewall, or virtual load balancer.</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-lg">
+                        <h3 class="text-xl font-semibold text-emerald-400">3. Management & Orchestration (MANO)</h3>
+                        <p class="text-slate-300">The brain of NFV. This framework is responsible for creating, managing, and scaling the VNFs across the NFVI.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 14: SDN vs. NFV -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-8">SDN + NFV: A Powerful Combination</h2>
+                <p class="text-xl text-slate-300 mb-6">They are independent but work best together. This is a concept called "service chaining".</p>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <p class="text-lg text-slate-300">Imagine you need all incoming traffic to first go through a <span class="font-bold text-emerald-400">virtual firewall (VNF)</span>, then to a <span class="font-bold text-emerald-400">virtual load balancer (VNF)</span>. An <span class="font-bold text-sky-400">SDN controller</span> can dynamically program the network to steer the traffic through this exact chain of virtual functions, all running on the same physical server.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: Overview of NGN -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-2">NGN: The Vision of a Converged Network</h2>
+                <p class="text-xl text-slate-300 mb-6">NGN is a broad architectural shift to build a single network for all services, based on Internet Protocol (IP).</p>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <p class="text-lg text-slate-300">Historically, you had separate networks: the Public Switched Telephone Network (PSTN) for voice, a cable network for TV, and the internet for data. NGN collapses all of these onto one efficient, flexible, packet-switched infrastructure.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: The Layered Architecture of NGN -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-8">How NGN is Structured</h2>
+                 <div class="space-y-4">
+                    <div class="bg-slate-800 p-4 rounded-lg">
+                        <h3 class="text-xl font-semibold text-emerald-400">Access Layer</h3>
+                        <p class="text-slate-300">Connects users to the network (e.g., via Fiber, 5G, Wi-Fi).</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-lg">
+                        <h3 class="text-xl font-semibold text-emerald-400">Core Transport Layer</h3>
+                        <p class="text-slate-300">The high-speed IP backbone that transports all the data packets.</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-lg">
+                        <h3 class="text-xl font-semibold text-emerald-400">Control/Service Layer</h3>
+                        <p class="text-slate-300">The intelligence of the network. This is where services like VoIP, IPTV, and VPNs are managed, often using protocols like SIP (Session Initiation Protocol).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17: NGN: Benefits Over PSTN -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-2">Why NGN is Superior</h2>
+                <h3 class="text-2xl text-slate-300 mb-6">The End of Circuit-Switching</h3>
+                <div class="bg-slate-800 p-6 rounded-lg border-l-4 border-emerald-400">
+                    <p class="text-lg text-slate-300"><span class="font-bold text-white">Key Advantage:</span> Old phone networks used circuit-switching, where a dedicated line was reserved for your entire call, which was inefficient. NGN uses packet-switching, where data is broken into small packets that can share the network with others. This dramatically increases efficiency, lowers costs, and allows for the integration of data services alongside voice.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 18: Summary & Conclusion -->
+        <div class="slide">
+            <div class="slide-content text-center">
+                <h2 class="text-4xl font-bold text-sky-400 mb-8">Key Takeaways</h2>
+                <ul class="text-xl text-slate-200 space-y-3 text-left max-w-2xl mx-auto">
+                    <li><span class="font-semibold text-emerald-400">SCTP:</span> Solves HOL blocking with multi-streaming, providing robust, reliable transport for complex applications.</li>
+                    <li><span class="font-semibold text-emerald-400">SDN:</span> Decouples control and data planes, enabling network automation and programmability via APIs.</li>
+                    <li><span class="font-semibold text-emerald-400">NFV:</span> Virtualizes network functions on commodity hardware, enabling agility and on-demand scaling.</li>
+                    <li><span class="font-semibold text-emerald-400">NGN:</span> A unified, layered, all-IP architecture that converges voice, data, and video onto a single efficient network.</li>
+                </ul>
+                 <p class="mt-10 text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-emerald-400">Thank You!</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Navigation -->
+    <div class="fixed bottom-5 right-5 z-20 flex items-center space-x-2">
+        <span id="slide-counter" class="text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-md">1 / 18</span>
+        <button id="prev-btn" class="bg-sky-500 hover:bg-sky-600 text-white rounded-full p-3 transition-opacity duration-300 disabled:opacity-30 disabled:cursor-not-allowed">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+        </button>
+        <button id="next-btn" class="bg-sky-500 hover:bg-sky-600 text-white rounded-full p-3 transition-opacity duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        // --- JavaScript for Slide Navigation ---
+
+        // Get all the necessary DOM elements
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const slideCounter = document.getElementById('slide-counter');
+
+        // Initialize the current slide index
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+
+        /**
+         * Shows a specific slide by its index and hides others.
+         * @param {number} index - The index of the slide to show.
+         */
+        function showSlide(index) {
+            // Remove 'active' class from all slides
+            slides.forEach(slide => {
+                slide.classList.remove('active');
+            });
+
+            // Add 'active' class to the target slide
+            slides[index].classList.add('active');
+
+            // Update the slide counter display
+            slideCounter.textContent = `${index + 1} / ${totalSlides}`;
+
+            // Update button states (disabled at start/end)
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === totalSlides - 1;
+        }
+
+        /**
+         * Navigates to the next slide.
+         */
+        function goToNextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        /**
+         * Navigates to the previous slide.
+         */
+        function goToPrevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        // --- Event Listeners ---
+
+        // Add click event listeners to the navigation buttons
+        nextBtn.addEventListener('click', goToNextSlide);
+        prevBtn.addEventListener('click', goToPrevSlide);
+
+        // Add keyboard navigation (left/right arrow keys)
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowRight') {
+                goToNextSlide();
+            } else if (event.key === 'ArrowLeft') {
+                goToPrevSlide();
+            }
+        });
+
+        // --- Initial Setup ---
+        // Show the first slide and set initial button states when the page loads
+        showSlide(currentSlide);
+
+    </script>
+</body>
+</html>
