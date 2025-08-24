@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Database Topics: Concurrency & Recovery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 4rem;
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+            z-index: 10;
+        }
+        .slide-content {
+            max-width: 1000px;
+            width: 100%;
+        }
+        #progress-bar {
+            transition: width 0.3s ease-out;
+        }
+        .flow-chart-step {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeIn 0.5s forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white antialiased">
+
+    <!-- Presentation Container -->
+    <main id="presentation-container" class="relative w-full h-screen">
+
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div class="slide-content text-center">
+                <h1 class="text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-teal-400 mb-4">Advanced Database Topics</h1>
+                <p class="text-xl md:text-2xl text-slate-300">Concurrency Control & Recovery Techniques</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Agenda -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-8">Agenda</h2>
+                <div class="grid md:grid-cols-2 gap-8 text-xl">
+                    <div>
+                        <h3 class="font-semibold text-teal-400 text-2xl mb-4 border-b border-teal-500/50 pb-2">Part 1: Concurrency Control</h3>
+                        <ul class="space-y-2 list-disc list-inside text-slate-200">
+                            <li>Two-Phase Locking (2PL) & its variants</li>
+                            <li>Deadlocks & Lock Granularity</li>
+                            <li>Timestamp Ordering</li>
+                            <li>Multiversion Concurrency Control (MVCC)</li>
+                            <li>Validation (Optimistic) Techniques</li>
+                            <li>Snapshot Isolation & Write Skew</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-teal-400 text-2xl mb-4 border-b border-teal-500/50 pb-2">Part 2: Database Recovery</h3>
+                        <ul class="space-y-2 list-disc list-inside text-slate-200">
+                            <li>Recovery Concepts & The Log</li>
+                            <li>Deferred vs. Immediate Update</li>
+                            <li>Checkpoints & The ARIES Algorithm</li>
+                            <li>Shadow Paging</li>
+                            <li>Backup & Point-in-Time Recovery</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Part 1: Concurrency Control -->
+        <div class="slide">
+            <div class="slide-content text-center">
+                 <h2 class="text-2xl font-semibold text-sky-400 mb-4">Part 1</h2>
+                <h1 class="text-5xl font-bold text-white">Concurrency Control</h1>
+                <p class="text-xl text-slate-300 mt-4">Ensuring data integrity when multiple transactions run simultaneously.</p>
+            </div>
+        </div>
+        
+        <!-- Slide 4: Why Concurrency Control? -->
+        <div class="slide">
+            <div class="slide-content">
+                 <h2 class="text-4xl font-bold text-sky-400 mb-6">Why Do We Need Concurrency Control?</h2>
+                 <p class="text-xl text-slate-300 mb-6">To prevent data corruption from interleaving operations (concurrency anomalies).</p>
+                 <div class="grid md:grid-cols-2 gap-6 text-center bg-slate-800 p-6 rounded-lg">
+                    <div>
+                        <h3 class="text-xl font-semibold text-red-400 mb-2">Without Control (Chaos)</h3>
+                        <p class="text-slate-300">Analogy: Two people editing the same sentence in a shared document at once. The final result is gibberish.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-green-400 mb-2">With Control (Order)</h3>
+                        <p class="text-slate-300">Analogy: The document "locks" the sentence for the first editor, making the second one wait. The result is coherent.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: 2PL -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Technique 1: Two-Phase Locking (2PL)</h2>
+                <p class="text-xl text-slate-300 mb-6">A pessimistic approach that locks data before using it to ensure serializability.</p>
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div class="space-y-4">
+                        <div class="bg-slate-800 p-4 rounded-lg">
+                            <h3 class="font-semibold text-teal-400 text-xl">Phase 1: Growing Phase</h3>
+                            <p>Transaction acquires all the locks it needs. It cannot release any locks in this phase.</p>
+                        </div>
+                        <div class="bg-slate-800 p-4 rounded-lg">
+                            <h3 class="font-semibold text-teal-400 text-xl">Phase 2: Shrinking Phase</h3>
+                            <p>Transaction releases its locks. It cannot acquire any new locks in this phase.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-center bg-slate-800 p-6 rounded-lg">
+                            <p class="font-mono text-teal-300">Growing Phase --&gt; Lock Point --&gt; Shrinking Phase</p>
+                            <div class="w-full bg-slate-700 h-2 rounded-full mt-4 flex">
+                                <div class="bg-teal-500 w-1/2 h-2 rounded-l-full"></div>
+                                <div class="bg-sky-500 w-1/2 h-2 rounded-r-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 6: 2PL Variants -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Variants of 2PL</h2>
+                <p class="text-xl text-slate-300 mb-4">Basic 2PL can suffer from <span class="text-red-400">cascading rollbacks</span>. These variants prevent it.</p>
+                <div class="space-y-4">
+                    <div class="bg-slate-800 p-4 rounded-lg">
+                        <h3 class="font-semibold text-teal-400 text-xl">Strict 2PL</h3>
+                        <p>Holds all <span class="font-bold">exclusive (write) locks</span> until the transaction commits or aborts. Prevents other transactions from reading uncommitted data.</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-lg">
+                        <h3 class="font-semibold text-teal-400 text-xl">Rigorous 2PL</h3>
+                        <p>Holds <span class="font-bold">all locks (read and write)</span> until the transaction commits or aborts. Easiest to implement and is used in most commercial databases.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Deadlocks in 2PL -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">The Problem with 2PL: Deadlocks</h2>
+                <p class="text-xl text-slate-300 mb-4">A cycle of transactions waiting for locks held by each other.</p>
+                <div class="bg-slate-800 p-6 rounded-lg font-mono text-sm">
+                    <p><span class="text-teal-400">[T1]</span> LOCK(Account_A)</p>
+                    <p><span class="text-sky-400">[T2]</span> LOCK(Account_B)</p>
+                    <p><span class="text-teal-400">[T1]</span> Tries to LOCK(Account_B) -> <span class="text-yellow-400">Waits for T2</span></p>
+                    <p><span class="text-sky-400">[T2]</span> Tries to LOCK(Account_A) -> <span class="text-yellow-400">Waits for T1</span></p>
+                    <p class="text-red-400 mt-4 font-sans text-lg">Result: A deadly embrace! Neither can proceed.</p>
+                </div>
+                <p class="text-lg mt-4"><strong>Solution:</strong> Deadlock detection (via wait-for graphs) or prevention (timeouts). One transaction is chosen as a victim and rolled back.</p>
+            </div>
+        </div>
+
+        <!-- Slide 8: Lock Granularity -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Lock Granularity: A Balancing Act</h2>
+                <p class="text-xl text-slate-300 mb-4">What size of data item do we lock? This is a trade-off between concurrency and overhead.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div class="bg-slate-800 p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold text-teal-400">Fine Granularity (e.g., Row Lock)</h3>
+                        <p class="text-sm mt-2"><strong>Pro:</strong> High Concurrency<br><strong>Con:</strong> High lock management overhead</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-lg border-2 border-sky-500">
+                        <h3 class="text-lg font-semibold text-sky-400">Medium Granularity (e.g., Page Lock)</h3>
+                        <p class="text-sm mt-2">A common compromise.</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold text-red-400">Coarse Granularity (e.g., Table Lock)</h3>
+                        <p class="text-sm mt-2"><strong>Pro:</strong> Low overhead<br><strong>Con:</strong> Very low concurrency</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Timestamp Ordering -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Technique 2: Timestamp Ordering</h2>
+                <p class="text-xl text-slate-300 mb-6">Uses timestamps to determine the serial order of transactions. Older transactions get priority.</p>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <ul class="list-disc list-inside space-y-2 text-lg">
+                        <li>Each transaction is assigned a unique timestamp when it starts: <span class="font-mono text-teal-400">TS(T)</span>.</li>
+                        <li>Every data item has a Read-Timestamp and a Write-Timestamp.</li>
+                        <li>The protocol checks <span class="font-mono text-teal-400">TS(T)</span> against the data's timestamps to ensure the order is maintained.</li>
+                        <li>If a transaction is too "late" to read or write, it is aborted and restarted with a new timestamp.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: MVCC -->
+        <div class="slide">
+            <div class="slide-content">
+                 <h2 class="text-4xl font-bold text-sky-400 mb-6">Technique 3: Multiversion Concurrency Control (MVCC)</h2>
+                 <p class="text-xl text-slate-300 mb-6">"Readers don't block writers, and writers don't block readers."</p>
+                 <div class="bg-slate-800 p-6 rounded-lg">
+                    <p class="text-lg text-slate-200">Instead of overwriting data, the database creates a new version of the data item upon a write. Each transaction sees a consistent "snapshot" of the database as it existed when the transaction began.</p>
+                    <div class="mt-4">
+                        <p class="font-mono text-sm"><span class="text-teal-400">[T1 starts]</span> Reads Account Balance = $100 (Version 1)</p>
+                        <p class="font-mono text-sm"><span class="text-sky-400">[T2 starts]</span> Reads Account Balance = $100 (Version 1)</p>
+                        <p class="font-mono text-sm"><span class="text-sky-400">[T2 writes]</span> Account Balance = $120 (Creates Version 2)</p>
+                        <p class="font-mono text-sm"><span class="text-teal-400">[T1 reads again]</span> Still sees Account Balance = $100 (Version 1)</p>
+                    </div>
+                 </div>
+            </div>
+        </div>
+        
+        <!-- Slide 11: Validation (Optimistic) -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Technique 4: Validation (Optimistic)</h2>
+                <p class="text-xl text-slate-300 mb-6">Assumes conflicts are rare. "Act first, ask for permission later."</p>
+                <div class="flex justify-around items-center text-center font-mono text-teal-300 mt-8">
+                    <div class="flow-chart-step p-4 bg-slate-800 rounded-lg">READ PHASE</div>
+                    <div class="flow-chart-step text-2xl" style="animation-delay: 0.2s;">&rarr;</div>
+                    <div class="flow-chart-step p-4 bg-slate-800 rounded-lg" style="animation-delay: 0.4s;">VALIDATION PHASE</div>
+                    <div class="flow-chart-step text-2xl" style="animation-delay: 0.6s;">&rarr;</div>
+                    <div class="flow-chart-step p-4 bg-slate-800 rounded-lg" style="animation-delay: 0.8s;">WRITE PHASE</div>
+                </div>
+                <div class="mt-6 text-lg bg-slate-800 p-4 rounded-lg">
+                    Transactions execute freely in a private workspace. Before committing, the validation phase checks if the transaction's operations would violate serializability. If the check passes, it writes to the database. If not, it's rolled back.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Snapshot Isolation -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Technique 5: Snapshot Isolation</h2>
+                <p class="text-xl text-slate-300 mb-6">A popular MVCC implementation. Guarantees a transaction sees a consistent snapshot of the DB.</p>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <ul class="list-disc list-inside space-y-2 text-lg">
+                        <li>A transaction operates on a database snapshot taken at the moment it started.</li>
+                        <li>Prevents "dirty reads" and "non-repeatable reads".</li>
+                        <li>A transaction will only commit if no other committed transaction has modified the same data it has modified. This is the "first-committer-wins" rule.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 13: Write Skew Anomaly -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">The Danger of Snapshot Isolation: Write Skew</h2>
+                <h3 class="text-2xl text-slate-300 mb-4">Scenario: On-Call Doctor Rota</h3>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <p class="text-lg text-slate-200 mb-4"><strong>Rule:</strong> At least one doctor must be on call.</p>
+                    <ol class="list-decimal list-inside space-y-1 font-mono text-sm">
+                        <li>Two doctors, Alice and Bob, are on call. They both want to take the day off.</li>
+                        <li><span class="text-teal-400">[T-Alice starts]</span> Reads rota, sees 2 doctors on call. (Ok to take off)</li>
+                        <li><span class="text-sky-400">[T-Bob starts]</span> Reads rota, sees 2 doctors on call. (Ok to take off)</li>
+                        <li><span class="text-teal-400">[T-Alice writes]</span> Sets her status to OFF. Commits.</li>
+                        <li><span class="text-sky-400">[T-Bob writes]</span> Sets his status to OFF. Commits.</li>
+                    </ol>
+                    <p class="text-red-400 mt-4 font-sans text-lg"><strong>Result:</strong> Both transactions succeed because they didn't modify the *same* data. But the database is now in an inconsistent state (0 doctors on call). This is a write skew anomaly.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Comparison Table -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Concurrency Techniques: Comparison</h2>
+                <table class="w-full text-left border-collapse">
+                    <thead><tr class="bg-slate-800 text-teal-400"><th class="p-3">Technique</th><th class="p-3">Approach</th><th class="p-3">Pros</th><th class="p-3">Cons</th></tr></thead>
+                    <tbody class="bg-slate-800/50">
+                        <tr class="border-t border-slate-700"><td class="p-3 font-semibold">2PL</td><td class="p-3">Pessimistic (Locking)</td><td class="p-3">Prevents most anomalies</td><td class="p-3">Deadlocks, Low concurrency</td></tr>
+                        <tr class="border-t border-slate-700"><td class="p-3 font-semibold">Timestamp</td><td class="p-3">Pessimistic (Ordering)</td><td class="p-3">No deadlocks</td><td class="p-3">Can have transaction starvation</td></tr>
+                        <tr class="border-t border-slate-700"><td class="p-3 font-semibold">Validation</td><td class="p-3">Optimistic</td><td class="p-3">High concurrency if no conflicts</td><td class="p-3">High rollback cost on conflicts</td></tr>
+                        <tr class="border-t border-slate-700"><td class="p-3 font-semibold">MVCC</td><td class="p-3">Optimistic (Versioning)</td><td class="p-3">Readers don't block writers</td><td class="p-3">Storage overhead, write skew</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Part 2: Recovery -->
+        <div class="slide">
+            <div class="slide-content text-center">
+                 <h2 class="text-2xl font-semibold text-sky-400 mb-4">Part 2</h2>
+                <h1 class="text-5xl font-bold text-white">Database Recovery</h1>
+                <p class="text-xl text-slate-300 mt-4">Restoring the database to a consistent state after a failure.</p>
+            </div>
+        </div>
+
+        <!-- Slide 16: Recovery Concepts -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Core Recovery Concepts</h2>
+                <p class="text-xl text-slate-300 mb-6">Failures are inevitable. The goal is to ensure the <span class="text-teal-400 font-semibold">ACID</span> properties (Atomicity, Consistency) are maintained.</p>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold text-white mb-2">The Transaction Log</h3>
+                    <p>The most critical component. It's a sequential, append-only file on stable storage that records all database modifications before they happen on disk (Write-Ahead Logging).</p>
+                    <p class="font-mono text-sm mt-2 text-slate-400">&lt;T1, start&gt;<br>&lt;T1, Account_A, old_val, new_val&gt;<br>&lt;T1, commit&gt;</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17: Deferred Update -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Recovery 1: Deferred Update</h2>
+                <p class="text-xl text-slate-300 mb-6">"Don't write it until you're sure." Updates are only written to the database disk after a transaction commits.</p>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold text-white mb-2">Recovery Process: NO-UNDO / REDO</h3>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li>Since uncommitted transactions never wrote to the disk, there's nothing to <span class="font-bold text-red-400">UNDO</span>.</li>
+                        <li>The recovery system scans the log and uses the log records to <span class="font-bold text-green-400">REDO</span> the operations of any committed transactions.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 18: Immediate Update -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Recovery 2: Immediate Update</h2>
+                <p class="text-xl text-slate-300 mb-6">"Write it now, but log it first." Updates are written to the database disk as they happen.</p>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold text-white mb-2">Recovery Process: UNDO / REDO</h3>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li>The recovery system must <span class="font-bold text-red-400">UNDO</span> the changes of any transactions that started but did not commit before the crash.</li>
+                        <li>It must also <span class="font-bold text-green-400">REDO</span> the changes of any transactions that did commit, to ensure their changes are persistent.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 19: Comparison -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Update Techniques: Comparison</h2>
+                 <table class="w-full text-left border-collapse">
+                    <thead><tr class="bg-slate-800 text-teal-400"><th class="p-3">Feature</th><th class="p-3">Deferred Update</th><th class="p-3">Immediate Update</th></tr></thead>
+                    <tbody class="bg-slate-800/50">
+                        <tr class="border-t border-slate-700"><td class="p-3 font-semibold">Recovery Action</td><td class="p-3">REDO only</td><td class="p-3">UNDO and REDO</td></tr>
+                        <tr class="border-t border-slate-700"><td class="p-3 font-semibold">Complexity</td><td class="p-3">Simpler recovery</td><td class="p-3">More complex recovery</td></tr>
+                        <tr class="border-t border-slate-700"><td class="p-3 font-semibold">Overhead</td><td class="p-3">Longer commits (writes happen at end)</td><td class="p-3">Faster commits (writes happen during)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 20: Checkpoints -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Optimizing Recovery: Checkpoints</h2>
+                <p class="text-xl text-slate-300 mb-6">Scanning the entire log on recovery is slow. Checkpoints are used to limit the work.</p>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <p class="text-lg">Periodically, the system performs a checkpoint:</p>
+                    <ol class="list-decimal list-inside mt-2 space-y-2">
+                        <li>Forces all modified data from memory to disk.</li>
+                        <li>Writes a <span class="font-mono text-teal-400">&lt;checkpoint&gt;</span> record to the log.</li>
+                    </ol>
+                    <p class="mt-4">On recovery, the system only needs to scan the log forward from the last checkpoint, dramatically speeding up the process.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 21: ARIES -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Advanced Recovery: ARIES</h2>
+                <p class="text-xl text-slate-300 mb-6">A widely adopted algorithm for recovery based on Immediate Update.</p>
+                <div class="flex justify-around items-center text-center font-mono text-teal-300 mt-8">
+                    <div class="flow-chart-step p-4 bg-slate-800 rounded-lg">ANALYSIS PHASE</div>
+                    <div class="flow-chart-step text-2xl" style="animation-delay: 0.2s;">&rarr;</div>
+                    <div class="flow-chart-step p-4 bg-slate-800 rounded-lg" style="animation-delay: 0.4s;">REDO PHASE</div>
+                    <div class="flow-chart-step text-2xl" style="animation-delay: 0.6s;">&rarr;</div>
+                    <div class="flow-chart-step p-4 bg-slate-800 rounded-lg" style="animation-delay: 0.8s;">UNDO PHASE</div>
+                </div>
+                <div class="mt-6 text-lg bg-slate-800 p-4 rounded-lg">
+                    <strong>Analysis:</strong> Scans log forward from last checkpoint to identify active transactions.<br>
+                    <strong>REDO:</strong> Repeats all operations (even for aborted transactions) to bring DB to its state at the moment of the crash.<br>
+                    <strong>UNDO:</strong> Scans log backward to revert the operations of uncommitted transactions.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 22: Shadow Paging -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Recovery 3: Shadow Paging</h2>
+                <p class="text-xl text-slate-300 mb-6">An elegant, no-log recovery technique. It never overwrites active data pages.</p>
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <p>When a write occurs, a copy of the page is made (a "shadow page"). The original is untouched. A "current" page table points to the modified pages.</p>
+                        <p class="mt-4">If the transaction commits, the "current" page table becomes the new master. If it aborts or crashes, the "current" page table is simply discarded.</p>
+                    </div>
+                    <div>
+                        <div class="text-center bg-slate-800 p-6 rounded-lg">
+                             <p class="font-mono text-teal-300">DB Pointer &rarr; Shadow Page Table (Original)</p>
+                             <p class="font-mono text-sky-300 mt-4">Transaction Pointer &rarr; Current Page Table (Modified)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 23: Shadow Paging Scenario -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Shadow Paging: Crash Scenario</h2>
+                <h3 class="text-2xl text-slate-300 mb-4">Online Banking Transfer</h3>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <ol class="list-decimal list-inside space-y-2">
+                        <li><strong>State:</strong> The main DB pointer points to the <span class="text-teal-400">Shadow Page Table</span>.</li>
+                        <li><strong>Transaction Starts:</strong> A new <span class="text-sky-400">Current Page Table</span> is created.</li>
+                        <li><strong>Write 1:</strong> User A's balance is debited. A copy of that data page is created, and the <span class="text-sky-400">Current Page Table</span> is updated to point to this new page.</li>
+                        <li><strong class="text-red-500">CRASH!</strong> The system fails before the transaction commits.</li>
+                        <li><strong>Recovery:</strong> On restart, the system discards the <span class="text-sky-400">Current Page Table</span>. The main DB pointer never moved from the original <span class="text-teal-400">Shadow Page Table</span>. The database is instantly consistent. No UNDO needed.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 24: Backup and Recovery -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Recovery 4: Backup & Recovery</h2>
+                <p class="text-xl text-slate-300 mb-6">For catastrophic failures (e.g., disk destruction), local logs and shadow pages are useless.</p>
+                <div class="grid md:grid-cols-3 gap-6 text-center">
+                    <div class="bg-slate-800 p-4 rounded-lg"><h3 class="font-semibold text-teal-400 text-xl">Full Backup</h3><p>A complete copy of the entire database.</p></div>
+                    <div class="bg-slate-800 p-4 rounded-lg"><h3 class="font-semibold text-teal-400 text-xl">Differential Backup</h3><p>Copies all changes made since the last <strong>full</strong> backup.</p></div>
+                    <div class="bg-slate-800 p-4 rounded-lg"><h3 class="font-semibold text-teal-400 text-xl">Transactional Log Backup</h3><p>Copies the transaction log records.</p></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 25: Catastrophic Failure Scenario -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Scenario: Data Center Fire</h2>
+                <h3 class="text-2xl text-slate-300 mb-4">Recovering an E-commerce Database</h3>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <p class="text-lg text-slate-200 mb-4"><strong>Timeline:</strong> A fire destroys the main database server at 3:30 PM.</p>
+                    <ol class="list-decimal list-inside space-y-2">
+                        <li><strong>Step 1:</strong> Provision a new server in a different location.</li>
+                        <li><strong>Step 2:</strong> Restore the last off-site <span class="text-teal-400">full backup</span> (Sunday 2:00 AM).</li>
+                        <li><strong>Step 3:</strong> Restore the last off-site <span class="text-teal-400">differential backup</span> (Today 1:00 PM).</li>
+                        <li><strong>Step 4:</strong> Apply all subsequent <span class="text-teal-400">transaction log backups</span>, which are shipped off-site every 15 minutes, up to the 3:15 PM backup.</li>
+                        <li><strong>Result:</strong> About 15 minutes of data loss (Recovery Point Objective), but the database is recovered.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 26: Point-in-Time Recovery -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-6">Advanced Recovery: Point-in-Time (PITR)</h2>
+                <h3 class="text-2xl text-slate-300 mb-4">Scenario: Accidental `DROP TABLE`</h3>
+                <div class="bg-slate-800 p-6 rounded-lg">
+                    <p class="text-lg text-slate-200 mb-4"><strong>Timeline:</strong> A developer accidentally drops the main `users` table at 10:05:30 AM.</p>
+                    <ol class="list-decimal list-inside space-y-2">
+                        <li><strong>Step 1:</strong> Restore the last full/differential backup.</li>
+                        <li><strong>Step 2:</strong> Instead of applying all log backups, use a database command like <code class="bg-slate-700 p-1 rounded text-sm text-teal-300">RESTORE ... WITH STOPAT = '10:05:29'</code>.</li>
+                        <li><strong>Result:</strong> The database is restored to the exact second before the disastrous command was executed. This is possible because of the continuous stream of transaction log backups.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 27: Summary -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-sky-400 mb-8">Summary & Key Takeaways</h2>
+                <div class="grid md:grid-cols-2 gap-8 text-lg">
+                    <div>
+                        <h3 class="font-semibold text-teal-400 text-2xl mb-4">Concurrency Control</h3>
+                        <p>It's a trade-off between performance and correctness. Pessimistic methods like <span class="font-bold">Rigorous 2PL</span> are safe but can cause deadlocks. Optimistic methods like <span class="font-bold">MVCC</span> are fast for reads but can introduce subtle anomalies like write skew.</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-teal-400 text-2xl mb-4">Database Recovery</h3>
+                        <p>The <span class="font-bold">Write-Ahead Log</span> is the foundation for recovering from most failures, optimized by <span class="font-bold">checkpoints</span>. For catastrophic failures, a disciplined <span class="font-bold">backup and log shipping</span> strategy is the only solution, enabling powerful features like PITR.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 28: Q&A -->
+        <div class="slide">
+            <div class="slide-content text-center">
+                <h1 class="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-teal-400">Thank You</h1>
+                <p class="text-2xl text-slate-300 mt-4">Questions?</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Navigation & Progress -->
+    <div class="fixed bottom-0 left-0 w-full z-20">
+        <div id="progress-bar" class="h-1 bg-sky-500"></div>
+        <div class="flex justify-between items-center p-4 bg-slate-900/50 backdrop-blur-sm">
+            <button id="fullscreen-btn" class="bg-slate-700 hover:bg-slate-600 text-white rounded-md p-2">
+                <svg id="fullscreen-enter-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 1v4m0 0h-4m4 0l-5-5" /></svg>
+                <svg id="fullscreen-exit-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h6v6m0 0l-7 7-4-4 7-7zm-12 6h6v6m0 0l-7 7-4-4 7-7z" /></svg>
+            </button>
+            <div class="flex items-center space-x-2">
+                <span id="slide-counter" class="text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-md">1 / 28</span>
+                <button id="prev-btn" class="bg-sky-500 hover:bg-sky-600 text-white rounded-full p-3 transition-opacity duration-300 disabled:opacity-30 disabled:cursor-not-allowed">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button id="next-btn" class="bg-sky-500 hover:bg-sky-600 text-white rounded-full p-3 transition-opacity duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const slideCounter = document.getElementById('slide-counter');
+            const progressBar = document.getElementById('progress-bar');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const enterIcon = document.getElementById('fullscreen-enter-icon');
+            const exitIcon = document.getElementById('fullscreen-exit-icon');
+            
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+
+                slideCounter.textContent = `${index + 1} / ${totalSlides}`;
+                progressBar.style.width = `${((index + 1) / totalSlides) * 100}%`;
+
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === totalSlides - 1;
+            }
+
+            function goToNextSlide() {
+                if (currentSlide < totalSlides - 1) {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                }
+            }
+
+            function goToPrevSlide() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    showSlide(currentSlide);
+                }
+            }
+            
+            function toggleFullScreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                    enterIcon.classList.add('hidden');
+                    exitIcon.classList.remove('hidden');
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                        enterIcon.classList.remove('hidden');
+                        exitIcon.classList.add('hidden');
+                    }
+                }
+            }
+
+            nextBtn.addEventListener('click', goToNextSlide);
+            prevBtn.addEventListener('click', goToPrevSlide);
+            fullscreenBtn.addEventListener('click', toggleFullScreen);
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowRight') {
+                    goToNextSlide();
+                } else if (event.key === 'ArrowLeft') {
+                    goToPrevSlide();
+                } else if (event.key === 'f') {
+                    toggleFullScreen();
+                }
+            });
+            
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) {
+                    enterIcon.classList.remove('hidden');
+                    exitIcon.classList.add('hidden');
+                }
+            });
+
+            showSlide(currentSlide);
+        });
+    </script>
+</body>
+</html>
