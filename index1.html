@@ -1,1 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reverse Engineering: Deconstructing the Digital World</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .font-code {
+            font-family: 'Fira Code', monospace;
+        }
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 4rem;
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+            transform: scale(0.98);
+            pointer-events: none;
+        }
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            z-index: 10;
+        }
+        .slide-content {
+            max-width: 1000px;
+            width: 100%;
+        }
+        #progress-bar {
+            transition: width 0.3s ease-out;
+        }
+        .animated-item {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white antialiased">
 
+    <!-- Presentation Container -->
+    <main id="presentation-container" class="relative w-full h-screen bg-grid">
+        <!-- Background Grid -->
+        <div class="absolute inset-0 z-0" style="background-image: radial-gradient(circle, rgba(13, 148, 136, 0.1) 1px, transparent 1px); background-size: 2rem 2rem;"></div>
+
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div class="slide-content text-center relative z-10">
+                <h1 class="text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-cyan-400 mb-4">Reverse Engineering</h1>
+                <p class="text-xl md:text-2xl text-gray-300">Deconstructing the Digital World</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: What is Reverse Engineering? -->
+        <div class="slide">
+            <div class="slide-content relative z-10">
+                <h2 class="text-4xl font-bold text-teal-400 mb-6 animated-item">What is Reverse Engineering?</h2>
+                <p class="text-xl text-gray-300 mb-6 animated-item" style="animation-delay: 0.2s;">The process of analyzing a system, device, or software to understand its design, architecture, or source code, without having access to the original design documents.</p>
+                <div class="bg-gray-800/50 backdrop-blur-sm p-6 rounded-lg grid md:grid-cols-2 gap-6 items-center animated-item" style="animation-delay: 0.4s;">
+                    <div>
+                        <h3 class="text-2xl font-semibold text-cyan-400 mb-2">The Goal</h3>
+                        <p>To deduce the "how" and "why" from the "what."</p>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold text-cyan-400 mb-2">Analogy</h3>
+                        <p>Like a mechanic taking apart a car engine to learn how it works, without the original blueprints.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Why Reverse Engineer? -->
+        <div class="slide">
+            <div class="slide-content relative z-10">
+                <h2 class="text-4xl font-bold text-teal-400 mb-8 animated-item">Why Reverse Engineer? (The Motivations)</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-6 text-center">
+                    <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.2s;"><h3 class="text-xl font-semibold text-cyan-400">Security Analysis</h3><p class="mt-2 text-sm">Finding vulnerabilities in software.</p></div>
+                    <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.3s;"><h3 class="text-xl font-semibold text-cyan-400">Interoperability</h3><p class="mt-2 text-sm">Making different systems work together.</p></div>
+                    <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.4s;"><h3 class="text-xl font-semibold text-cyan-400">Malware Analysis</h3><p class="mt-2 text-sm">Understanding how viruses and malware work.</p></div>
+                    <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.5s;"><h3 class="text-xl font-semibold text-cyan-400">Legacy Support</h3><p class="mt-2 text-sm">Recreating lost source code for old systems.</p></div>
+                    <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.6s;"><h3 class="text-xl font-semibold text-cyan-400">Learning & Education</h3><p class="mt-2 text-sm">Studying how complex algorithms are built.</p></div>
+                    <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.7s;"><h3 class="text-xl font-semibold text-cyan-400">Competitive Analysis</h3><p class="mt-2 text-sm">Understanding a competitor's product.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: The Process -->
+        <div class="slide">
+            <div class="slide-content relative z-10">
+                <h2 class="text-4xl font-bold text-teal-400 mb-8 text-center animated-item">The Reverse Engineering Process</h2>
+                <div class="flex flex-col md:flex-row justify-around items-center text-center font-code text-cyan-300">
+                    <div class="animated-item p-4 bg-gray-800/50 rounded-lg" style="animation-delay: 0.2s;">System Analysis</div>
+                    <div class="animated-item text-2xl my-2 md:my-0 md:mx-2" style="animation-delay: 0.4s;">&rarr;</div>
+                    <div class="animated-item p-4 bg-gray-800/50 rounded-lg" style="animation-delay: 0.6s;">Disassembly</div>
+                    <div class="animated-item text-2xl my-2 md:my-0 md:mx-2" style="animation-delay: 0.8s;">&rarr;</div>
+                    <div class="animated-item p-4 bg-gray-800/50 rounded-lg" style="animation-delay: 1.0s;">Decompilation</div>
+                    <div class="animated-item text-2xl my-2 md:my-0 md:mx-2" style="animation-delay: 1.2s;">&rarr;</div>
+                    <div class="animated-item p-4 bg-gray-800/50 rounded-lg" style="animation-delay: 1.4s;">Logic Analysis</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Core Technique: Static Analysis -->
+        <div class="slide">
+            <div class="slide-content relative z-10">
+                <h2 class="text-4xl font-bold text-teal-400 mb-6 animated-item">Core Technique: Static Analysis</h2>
+                <p class="text-xl text-gray-300 mb-6 animated-item" style="animation-delay: 0.2s;">Analyzing a program's code <span class="font-bold text-cyan-400">without executing it</span>. It's like reading the sheet music for a song.</p>
+                <div class="bg-gray-800/50 backdrop-blur-sm p-6 rounded-lg animated-item" style="animation-delay: 0.4s;">
+                    <h3 class="text-2xl font-semibold text-white mb-2">What you do:</h3>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li>Examine the binary file structure.</li>
+                        <li>Use a disassembler to convert machine code into human-readable assembly.</li>
+                        <li>Use a decompiler to attempt to recreate high-level source code.</li>
+                        <li>Map out the program's logic, functions, and data flow.</li>
+                    </ul>
+                    <p class="mt-4 font-semibold">Popular Tools: IDA Pro, Ghidra, Binary Ninja</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Core Technique: Dynamic Analysis -->
+        <div class="slide">
+            <div class="slide-content relative z-10">
+                <h2 class="text-4xl font-bold text-teal-400 mb-6 animated-item">Core Technique: Dynamic Analysis</h2>
+                <p class="text-xl text-gray-300 mb-6 animated-item" style="animation-delay: 0.2s;">Analyzing a program <span class="font-bold text-cyan-400">while it is running</span>. It's like listening to the song being played.</p>
+                <div class="bg-gray-800/50 backdrop-blur-sm p-6 rounded-lg animated-item" style="animation-delay: 0.4s;">
+                    <h3 class="text-2xl font-semibold text-white mb-2">What you do:</h3>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li>Run the program in a controlled environment (debugger or sandbox).</li>
+                        <li>Set breakpoints to pause execution at specific points.</li>
+                        <li>Inspect memory, CPU registers, and program state.</li>
+                        <li>Trace system calls and network activity.</li>
+                    </ul>
+                    <p class="mt-4 font-semibold">Popular Tools: x64dbg, GDB, Wireshark, Procmon</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: A Look at Assembly Code -->
+        <div class="slide">
+            <div class="slide-content relative z-10">
+                <h2 class="text-4xl font-bold text-teal-400 mb-6 animated-item">A Glimpse into the Matrix: Assembly Code</h2>
+                <p class="text-xl text-gray-300 mb-6 animated-item" style="animation-delay: 0.2s;">This is what a reverse engineer often works with. It's the lowest-level human-readable language.</p>
+                <div class="bg-black p-6 rounded-lg font-code text-sm animated-item" style="animation-delay: 0.4s;">
+                    <p><span class="text-purple-400">check_password:</span></p>
+                    <p class="ml-4"><span class="text-cyan-400">mov</span> <span class="text-yellow-400">eax</span>, [<span class="text-yellow-400">esp</span>+4]  <span class="text-gray-500">; Move user input into EAX register</span></p>
+                    <p class="ml-4"><span class="text-cyan-400">cmp</span> <span class="text-yellow-400">eax</span>, <span class="text-green-400">0x1337</span>      <span class="text-gray-500">; Compare input with the correct password (hex)</span></p>
+                    <p class="ml-4"><span class="text-cyan-400">jne</span> <span class="text-red-400">.fail</span>         <span class="text-gray-500">; Jump to 'fail' if not equal</span></p>
+                    <p class="ml-4"><span class="text-cyan-400">mov</span> <span class="text-yellow-400">eax</span>, 1          <span class="text-gray-500">; Set return value to 1 (success)</span></p>
+                    <p class="ml-4"><span class="text-cyan-400">ret</span></p>
+                    <p class="ml-4"><span class="text-red-400">.fail:</span></p>
+                    <p class="ml-8"><span class="text-cyan-400">mov</span> <span class="text-yellow-400">eax</span>, 0          <span class="text-gray-500">; Set return value to 0 (failure)</span></p>
+                    <p class="ml-8"><span class="text-cyan-400">ret</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Real-World Example 1: Malware Analysis -->
+        <div class="slide">
+            <div class="slide-content relative z-10">
+                <h2 class="text-4xl font-bold text-teal-400 mb-6 animated-item">Example 1: Malware Analysis</h2>
+                <h3 class="text-2xl text-gray-300 mb-4 animated-item" style="animation-delay: 0.2s;">Analyzing a Ransomware Sample</h3>
+                <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.4s;">
+                    <ol class="list-decimal list-inside space-y-2">
+                        <li><strong>Static Analysis:</strong> Identify suspicious function calls like <code class="bg-gray-700 p-1 rounded text-sm text-cyan-300">CryptEncrypt</code> or network functions.</li>
+                        <li><strong>Dynamic Analysis:</strong> Run the malware in a safe sandbox. Observe it creating files (the ransom note) and making network connections to a command-and-control server.</li>
+                        <li><strong>Disassembly:</strong> Find the encryption algorithm used. If it's a weak or flawed implementation, a decryptor tool can be created.</li>
+                        <li><strong>Goal:</strong> Understand the threat, create detection signatures, and potentially develop a recovery tool.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Real-World Example 2: Game Modding -->
+        <div class="slide">
+            <div class="slide-content relative z-10">
+                <h2 class="text-4xl font-bold text-teal-400 mb-6 animated-item">Example 2: Game Modding & Interoperability</h2>
+                <h3 class="text-2xl text-gray-300 mb-4 animated-item" style="animation-delay: 0.2s;">Enabling New Features and Connections</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.4s;">
+                        <h4 class="text-xl font-semibold text-cyan-400 mb-2">Game Modding (e.g., Skyrim)</h4>
+                        <p>Reverse engineers analyze the game's data formats and scripting engine. This allows the community to create script extenders and tools that let users add new characters, quests, and features the original developers never envisioned.</p>
+                    </div>
+                    <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.6s;">
+                        <h4 class="text-xl font-semibold text-cyan-400 mb-2">Interoperability (e.g., Samba)</h4>
+                        <p>The Samba project reverse-engineered Microsoft's SMB networking protocol. This allows Linux and macOS computers to seamlessly share files and printers with Windows machines, creating interoperability where none existed before.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: The Legal and Ethical Landscape -->
+        <div class="slide">
+            <div class="slide-content relative z-10">
+                <h2 class="text-4xl font-bold text-teal-400 mb-6 animated-item">The Legal & Ethical Landscape</h2>
+                <p class="text-xl text-gray-300 mb-6 animated-item" style="animation-delay: 0.2s;">Reverse engineering exists in a legal gray area. It's a powerful tool that can be used for good or ill.</p>
+                <div class="bg-gray-800/50 backdrop-blur-sm p-6 rounded-lg animated-item" style="animation-delay: 0.4s;">
+                    <ul class="list-disc list-inside space-y-2">
+                        <li><strong>Copyright Law (DMCA):</strong> Can be illegal if used to circumvent copy protection for piracy.</li>
+                        <li><strong>Trade Secrets:</strong> Illegal if used to steal a competitor's proprietary algorithms.</li>
+                        <li><strong>EULAs:</strong> Many End-User License Agreements explicitly forbid reverse engineering.</li>
+                        <li><strong>Ethical Line:</strong> The intent matters. Is it for security research and interoperability (often seen as ethical) or for creating cheats, cracks, and malware (unethical)?</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 11: The Future of Reverse Engineering -->
+        <div class="slide">
+            <div class="slide-content relative z-10">
+                <h2 class="text-4xl font-bold text-teal-400 mb-6 animated-item">The Future of Reverse Engineering</h2>
+                <p class="text-xl text-gray-300 mb-6 animated-item" style="animation-delay: 0.2s;">The cat-and-mouse game continues to evolve.</p>
+                 <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.4s;">
+                        <h4 class="text-xl font-semibold text-cyan-400 mb-2">Increasing Complexity</h4>
+                        <p>Advanced obfuscation, anti-debugging tricks, and custom virtual machines make analysis harder.</p>
+                    </div>
+                    <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.6s;">
+                        <h4 class="text-xl font-semibold text-cyan-400 mb-2">AI & Machine Learning</h4>
+                        <p>AI is being used to automate parts of the process, like function identification and vulnerability detection.</p>
+                    </div>
+                     <div class="bg-gray-800/50 p-6 rounded-lg animated-item" style="animation-delay: 0.8s;">
+                        <h4 class="text-xl font-semibold text-cyan-400 mb-2">New Frontiers</h4>
+                        <p>The explosion of IoT, embedded systems (in cars, medical devices), and hardware means more targets and a greater need for security analysis.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Summary -->
+        <div class="slide">
+            <div class="slide-content relative z-10">
+                <h2 class="text-4xl font-bold text-teal-400 mb-8 animated-item">Summary & Key Takeaways</h2>
+                <div class="space-y-4 text-lg">
+                    <div class="bg-gray-800/50 p-4 rounded-lg animated-item" style="animation-delay: 0.2s;"><strong>It's a Detective Story:</strong> Reverse engineering is the art of deducing design from a finished product.</div>
+                    <div class="bg-gray-800/50 p-4 rounded-lg animated-item" style="animation-delay: 0.4s;"><strong>Two Core Methods:</strong> Static (reading the code) and Dynamic (watching it run) analysis are used together.</div>
+                    <div class="bg-gray-800/50 p-4 rounded-lg animated-item" style="animation-delay: 0.6s;"><strong>Wide-Ranging Impact:</strong> It's essential for cybersecurity, interoperability, and innovation.</div>
+                    <div class="bg-gray-800/50 p-4 rounded-lg animated-item" style="animation-delay: 0.8s;"><strong>A Double-Edged Sword:</strong> The legality and ethics depend heavily on intent and jurisdiction.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 13: Q&A -->
+        <div class="slide">
+            <div class="slide-content text-center relative z-10">
+                <h1 class="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-cyan-400">Thank You</h1>
+                <p class="text-2xl text-gray-300 mt-4">Questions?</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Navigation & Progress -->
+    <div class="fixed bottom-0 left-0 w-full z-20">
+        <div id="progress-bar" class="h-1 bg-teal-500"></div>
+        <div class="flex justify-between items-center p-4 bg-gray-900/50 backdrop-blur-sm">
+            <button id="fullscreen-btn" class="bg-gray-700 hover:bg-gray-600 text-white rounded-md p-2">
+                <svg id="fullscreen-enter-icon" xmlns="http://www.w.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 1v4m0 0h-4m4 0l-5-5" /></svg>
+                <svg id="fullscreen-exit-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h6v6m0 0l-7 7-4-4 7-7zm-12 6h6v6m0 0l-7 7-4-4 7-7z" /></svg>
+            </button>
+            <div class="flex items-center space-x-2">
+                <span id="slide-counter" class="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-md">1 / 13</span>
+                <button id="prev-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white rounded-full p-3 transition-opacity duration-300 disabled:opacity-30 disabled:cursor-not-allowed">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button id="next-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white rounded-full p-3 transition-opacity duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const slideCounter = document.getElementById('slide-counter');
+            const progressBar = document.getElementById('progress-bar');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const enterIcon = document.getElementById('fullscreen-enter-icon');
+            const exitIcon = document.getElementById('fullscreen-exit-icon');
+            
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+
+                slideCounter.textContent = `${index + 1} / ${totalSlides}`;
+                progressBar.style.width = `${((index + 1) / totalSlides) * 100}%`;
+
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === totalSlides - 1;
+            }
+
+            function goToNextSlide() {
+                if (currentSlide < totalSlides - 1) {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                }
+            }
+
+            function goToPrevSlide() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    showSlide(currentSlide);
+                }
+            }
+            
+            function toggleFullScreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            }
+
+            function updateFullscreenIcons() {
+                if (document.fullscreenElement) {
+                    enterIcon.classList.add('hidden');
+                    exitIcon.classList.remove('hidden');
+                } else {
+                    enterIcon.classList.remove('hidden');
+                    exitIcon.classList.add('hidden');
+                }
+            }
+
+            nextBtn.addEventListener('click', goToNextSlide);
+            prevBtn.addEventListener('click', goToPrevSlide);
+            fullscreenBtn.addEventListener('click', toggleFullScreen);
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowRight') {
+                    goToNextSlide();
+                } else if (event.key === 'ArrowLeft') {
+                    goToPrevSlide();
+                } else if (event.key.toLowerCase() === 'f') {
+                    toggleFullScreen();
+                }
+            });
+            
+            document.addEventListener('fullscreenchange', updateFullscreenIcons);
+
+            showSlide(currentSlide);
+        });
+    </script>
+</body>
+</html>
